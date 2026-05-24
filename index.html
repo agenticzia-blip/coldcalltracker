@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Appoint Funnels | Premium Cold Call Tracker</title>
   <!-- SEO & Styling Meta -->
-  <meta name="description" content="A state-of-the-art cold call tracker for high-ticket appointment setters and sales professional, themed in Appoint Funnels premium layout.">
+  <meta name="description" content="A state-of-the-art cold call tracker for high-ticket appointment setters and sales professional, themed in Appoint Funnels clean minimalist light layout.">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,343 +19,340 @@
 </head>
 <body>
   <div class="app-container">
-    
-    <!-- Top Decorative Gradient Glows -->
-    <div class="glow-bg glow-blue"></div>
-    <div class="glow-bg glow-purple"></div>
 
-    <!-- MAIN HEADER -->
-    <header class="main-header">
-      <div class="header-logo">
-        <div class="logo-icon">
-          <i data-lucide="layers" class="icon-gradient"></i>
-        </div>
-        <div class="logo-text">
-          <h1>APPOINT <span class="accent-text">FUNNELS</span></h1>
-          <p class="tagline">High-Performance Sales Tracker</p>
-        </div>
+    <!-- TOP NAVIGATION BAR (Minimalist with navigation tabs) -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <!-- Official Logo from logo.svg -->
+        <img src="logo.svg" alt="Appoint Funnels Logo" class="brand-logo-img">
+        <span class="brand-name">Appoint Funnels<span class="brand-dot">.</span></span>
       </div>
-      
-      <!-- Top Overview Metrics -->
-      <div class="overview-stats">
-        <div class="stat-mini">
-          <span class="label">TOTAL SAVED DIALS</span>
-          <span id="global-total-dials" class="value">0</span>
-        </div>
-        <div class="stat-mini">
-          <span class="label">BOOKINGS (1 YR)</span>
-          <span id="global-bookings" class="value success-color">0</span>
-        </div>
-        <div class="stat-mini">
-          <span class="label">AVG CONNECT RATE</span>
-          <span id="global-connect-rate" class="value info-color">0%</span>
-        </div>
-        <div class="stat-mini">
-          <span class="label">AVG BOOKING RATE</span>
-          <span id="global-booking-rate" class="value accent-color">0%</span>
-        </div>
-      </div>
+
+      <!-- Navigation Tabs (Tracker vs History) -->
+      <nav class="nav-tabs">
+        <button class="tab-link active" data-tab="tracker">
+          <i data-lucide="phone"></i> Tracker
+        </button>
+        <button class="tab-link" data-tab="history">
+          <i data-lucide="history"></i> History & Trends
+        </button>
+      </nav>
     </header>
 
-    <!-- CONTENT LAYOUT -->
-    <main class="main-content">
-      
-      <!-- LEFT SECTION: Active Session Tracker -->
-      <section class="tracker-section">
-        <div class="section-card main-glass">
-          <div class="section-header">
-            <div class="header-title">
-              <i data-lucide="phone-call" class="color-blue"></i>
-              <h2>Active Calling Session</h2>
-            </div>
-            <div class="header-actions">
-              <button id="btn-reset" class="btn btn-outline" title="Reset current session counts">
-                <i data-lucide="rotate-ccw"></i> Reset
-              </button>
-            </div>
-          </div>
-
-          <!-- Session Metadata Form -->
-          <div class="session-meta">
-            <div class="input-group">
-              <label for="session-name">Session Name / List Name</label>
-              <input type="text" id="session-name" placeholder="e.g. Cold Leads List A - Morning Hustle" autocomplete="off">
-            </div>
-            <div class="session-timer">
-              <i data-lucide="clock"></i>
-              <span id="timer-display">00:00:00</span>
-            </div>
-          </div>
-
-          <!-- THE 5 STAGE CARDS GRID -->
-          <div class="funnel-cards-grid">
+    <!-- TAB CONTENT 1: Outreach Tracker (Main Dialer Screen) -->
+    <div id="tab-content-tracker" class="tab-content active">
+      <main class="main-dashboard-content">
+        
+        <!-- HERO GRID: The 5 Minimalist Counter Cards Grid -->
+        <section class="tracker-hero-section">
+          <div class="minimalist-cards-grid">
             
             <!-- STAGE 1: Total Calls -->
-            <div class="funnel-card card-total" id="card-total">
-              <div class="card-glow"></div>
-              <div class="card-top">
-                <div class="card-badge">STAGE 1</div>
-                <button class="btn-decrement" data-target="total" title="Decrease count">
+            <div class="minimalist-card card-total" id="card-total">
+              <div class="card-top-action">
+                <span class="card-step-badge">STAGE 1</span>
+                <button class="btn-decrement" data-target="total" title="Decrease">
                   <i data-lucide="minus"></i>
                 </button>
               </div>
-              <div class="card-interactive-area" data-action="increment" data-target="total">
-                <div class="card-icon-wrapper">
-                  <i data-lucide="phone" class="card-icon"></i>
+              <div class="card-click-area" data-target="total">
+                <div class="card-icon-box">
+                  <i data-lucide="phone"></i>
                 </div>
-                <h3 class="card-label">Total Calls</h3>
-                <div class="card-value" id="count-total">0</div>
-                <div class="card-helper">Click card to Dial (+1)</div>
+                <div class="count-display" id="count-total">0</div>
+                <h3 class="card-heading">Total Calls</h3>
+                <p class="card-subtitle">Outbound Dials Made</p>
               </div>
-              <div class="card-footer">
+              <div class="card-footer-caption">
                 <span>Dial Baseline</span>
               </div>
             </div>
 
             <!-- STAGE 2: Picked Up -->
-            <div class="funnel-card card-picked" id="card-picked">
-              <div class="card-glow"></div>
-              <div class="card-top">
-                <div class="card-badge">STAGE 2</div>
-                <button class="btn-decrement" data-target="picked" title="Decrease count">
+            <div class="minimalist-card card-connect" id="card-picked">
+              <div class="card-top-action">
+                <span class="card-step-badge">STAGE 2</span>
+                <button class="btn-decrement" data-target="picked" title="Decrease">
                   <i data-lucide="minus"></i>
                 </button>
               </div>
-              <div class="card-interactive-area" data-action="increment" data-target="picked">
-                <div class="card-icon-wrapper">
-                  <i data-lucide="phone-incoming" class="card-icon"></i>
+              <div class="card-click-area" data-target="picked">
+                <div class="card-icon-box">
+                  <i data-lucide="phone-call"></i>
                 </div>
-                <h3 class="card-label">Picked Up</h3>
-                <div class="card-value" id="count-picked">0</div>
-                <div class="card-helper">Click to Log Connect (+1)</div>
+                <div class="count-display" id="count-picked">0</div>
+                <h3 class="card-heading">Picked Up</h3>
+                <p class="card-subtitle">Connected Conversations</p>
               </div>
-              <div class="card-footer">
-                <span class="footer-stat" id="pct-picked">0% Connect Rate</span>
+              <div class="card-footer-caption" id="pct-picked">
+                0% Connect Rate
               </div>
             </div>
 
             <!-- STAGE 3: Pitched -->
-            <div class="funnel-card card-pitched" id="card-pitched">
-              <div class="card-glow"></div>
-              <div class="card-top">
-                <div class="card-badge">STAGE 3</div>
-                <button class="btn-decrement" data-target="pitched" title="Decrease count">
+            <div class="minimalist-card card-pitch" id="card-pitched">
+              <div class="card-top-action">
+                <span class="card-step-badge">STAGE 3</span>
+                <button class="btn-decrement" data-target="pitched" title="Decrease">
                   <i data-lucide="minus"></i>
                 </button>
               </div>
-              <div class="card-interactive-area" data-action="increment" data-target="pitched">
-                <div class="card-icon-wrapper">
-                  <i data-lucide="presentation" class="card-icon"></i>
+              <div class="card-click-area" data-target="pitched">
+                <div class="card-icon-box">
+                  <i data-lucide="presentation"></i>
                 </div>
-                <h3 class="card-label">Pitched</h3>
-                <div class="card-value" id="count-pitched">0</div>
-                <div class="card-helper">Click to Log Pitch (+1)</div>
+                <div class="count-display" id="count-pitched">0</div>
+                <h3 class="card-heading">Pitched</h3>
+                <p class="card-subtitle">Full Offers Delivered</p>
               </div>
-              <div class="card-footer">
-                <span class="footer-stat" id="pct-pitched-connect">0% of Connects</span>
+              <div class="card-footer-caption" id="pct-pitched-connect">
+                0% of Connects
               </div>
             </div>
 
             <!-- STAGE 4: Not Interested -->
-            <div class="funnel-card card-not-interested" id="card-not-interested">
-              <div class="card-glow"></div>
-              <div class="card-top">
-                <div class="card-badge">STAGE 4</div>
-                <button class="btn-decrement" data-target="rejected" title="Decrease count">
+            <div class="minimalist-card card-reject" id="card-not-interested">
+              <div class="card-top-action">
+                <span class="card-step-badge">STAGE 4</span>
+                <button class="btn-decrement" data-target="rejected" title="Decrease">
                   <i data-lucide="minus"></i>
                 </button>
               </div>
-              <div class="card-interactive-area" data-action="increment" data-target="rejected">
-                <div class="card-icon-wrapper">
-                  <i data-lucide="thumbs-down" class="card-icon"></i>
+              <div class="card-click-area" data-target="rejected">
+                <div class="card-icon-box">
+                  <i data-lucide="thumbs-down"></i>
                 </div>
-                <h3 class="card-label">Not Interested</h3>
-                <div class="card-value" id="count-rejected">0</div>
-                <div class="card-helper">Click to Log Rejection (+1)</div>
+                <div class="count-display" id="count-rejected">0</div>
+                <h3 class="card-heading">Not Interested</h3>
+                <p class="card-subtitle">Negative Outcomes</p>
               </div>
-              <div class="card-footer">
-                <span class="footer-stat" id="pct-rejected">0% of Pitched</span>
+              <div class="card-footer-caption" id="pct-rejected">
+                0% of Pitched
               </div>
             </div>
 
             <!-- STAGE 5: Calls Booked -->
-            <div class="funnel-card card-booked" id="card-booked">
-              <div class="card-glow"></div>
-              <div class="card-top">
-                <div class="card-badge highlight-badge">CONVERSION</div>
-                <button class="btn-decrement" data-target="booked" title="Decrease count">
+            <div class="minimalist-card card-booked" id="card-booked">
+              <div class="card-top-action">
+                <span class="card-step-badge highlight-badge">CONVERSION</span>
+                <button class="btn-decrement" data-target="booked" title="Decrease">
                   <i data-lucide="minus"></i>
                 </button>
               </div>
-              <div class="card-interactive-area" data-action="increment" data-target="booked">
-                <div class="card-icon-wrapper">
-                  <i data-lucide="calendar-check" class="card-icon"></i>
+              <div class="card-click-area" data-target="booked">
+                <div class="card-icon-box">
+                  <i data-lucide="calendar-check"></i>
                 </div>
-                <h3 class="card-label">Calls Booked</h3>
-                <div class="card-value glow-text" id="count-booked">0</div>
-                <div class="card-helper-success">Click to Book Appointment (+1)</div>
+                <div class="count-display highlight-display" id="count-booked">0</div>
+                <h3 class="card-heading highlight-heading">Calls Booked</h3>
+                <p class="card-subtitle">Meetings Scheduled</p>
               </div>
-              <div class="card-footer">
-                <span class="footer-stat highlight-text" id="pct-booked">0% Overall Rate</span>
+              <div class="card-footer-caption highlight-footer" id="pct-booked">
+                0% Overall Rate
               </div>
             </div>
 
           </div>
 
-          <!-- Bottom Actions / Save Panel -->
-          <div class="action-panel">
-            <button id="btn-save" class="btn btn-primary btn-glow-purple">
-              <i data-lucide="save"></i> Save Session to History
-            </button>
+          <!-- CONTROLS & SESSION META PANEL -->
+          <div class="session-control-panel">
+            <div class="session-meta-inputs">
+              <div class="input-group">
+                <label for="session-name">Campaign Outreach List Label</label>
+                <input type="text" id="session-name" placeholder="e.g. Real Estate Brokers Batch #1 - Cold Call" autocomplete="off">
+              </div>
+              <div class="session-timer-box">
+                <i data-lucide="clock"></i>
+                <span id="timer-display">00:00:00</span>
+              </div>
+            </div>
+            <div class="session-action-buttons">
+              <button id="btn-save" class="btn btn-primary btn-save">
+                <i data-lucide="save"></i> Save Active Session to History
+              </button>
+              <button id="btn-reset" class="btn btn-outline-light btn-reset" title="Wipe current active session">
+                <i data-lucide="rotate-ccw"></i> Reset Session
+              </button>
+            </div>
           </div>
-        </div>
+        </section>
 
         <!-- VISUAL FUNNEL PROGRESS FLOW -->
-        <div class="section-card main-glass funnel-flow-wrapper">
-          <div class="section-header">
-            <div class="header-title">
-              <i data-lucide="filter-x" class="color-purple"></i>
-              <h2>Active Conversion Funnel Visualizer</h2>
+        <section class="visual-funnel-section">
+          <div class="dashboard-box visual-funnel-box">
+            <div class="box-header">
+              <h2>Active Session Funnel Conversion</h2>
+            </div>
+            <div class="funnel-progress-visual">
+              <div class="funnel-level level-total" id="funnel-lvl-total">
+                <div class="funnel-fill-bar"></div>
+                <div class="funnel-level-label">
+                  <span class="title">1. Total Dials</span>
+                  <span class="stats"><strong id="funnel-val-total">0</strong> calls</span>
+                </div>
+                <span class="level-pct">100%</span>
+              </div>
+              <div class="funnel-level level-connect" id="funnel-lvl-picked">
+                <div class="funnel-fill-bar"></div>
+                <div class="funnel-level-label">
+                  <span class="title">2. Connected Calls</span>
+                  <span class="stats"><strong id="funnel-val-picked">0</strong> connects</span>
+                </div>
+                <span class="level-pct" id="funnel-pct-picked">0%</span>
+              </div>
+              <div class="funnel-level level-pitch" id="funnel-lvl-pitched">
+                <div class="funnel-fill-bar"></div>
+                <div class="funnel-level-label">
+                  <span class="title">3. Offers Pitched</span>
+                  <span class="stats"><strong id="funnel-val-pitched">0</strong> pitched</span>
+                </div>
+                <span class="level-pct" id="funnel-pct-pitched">0%</span>
+              </div>
+              <div class="funnel-level level-booked" id="funnel-lvl-booked">
+                <div class="funnel-fill-bar"></div>
+                <div class="funnel-level-label">
+                  <span class="title">4. Appointments Booked</span>
+                  <span class="stats"><strong id="funnel-val-booked">0</strong> booked</span>
+                </div>
+                <span class="level-pct" id="funnel-pct-booked">0%</span>
+              </div>
             </div>
           </div>
-          <div class="funnel-visual">
-            <div class="funnel-level level-1" id="funnel-lvl-total">
-              <div class="funnel-fill"></div>
-              <div class="funnel-info">
-                <span class="level-title">1. Total Dials</span>
-                <span class="level-stats"><strong id="funnel-val-total">0</strong> calls</span>
-              </div>
-              <span class="level-pct">100%</span>
-            </div>
-            <div class="funnel-level level-2" id="funnel-lvl-picked">
-              <div class="funnel-fill"></div>
-              <div class="funnel-info">
-                <span class="level-title">2. Connected Contacts</span>
-                <span class="level-stats"><strong id="funnel-val-picked">0</strong> connections</span>
-              </div>
-              <span class="level-pct" id="funnel-pct-picked">0%</span>
-            </div>
-            <div class="funnel-level level-3" id="funnel-lvl-pitched">
-              <div class="funnel-fill"></div>
-              <div class="funnel-info">
-                <span class="level-title">3. Offers Pitched</span>
-                <span class="level-stats"><strong id="funnel-val-pitched">0</strong> pitches</span>
-              </div>
-              <span class="level-pct" id="funnel-pct-pitched">0%</span>
-            </div>
-            <div class="funnel-level level-4" id="funnel-lvl-booked">
-              <div class="funnel-fill"></div>
-              <div class="funnel-info">
-                <span class="level-title">4. Closed Bookings</span>
-                <span class="level-stats"><strong id="funnel-val-booked">0</strong> meetings</span>
-              </div>
-              <span class="level-pct" id="funnel-pct-booked">0%</span>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- RIGHT SECTION: History & Analytics -->
-      <section class="analytics-section">
+      </main>
+    </div>
+
+    <!-- TAB CONTENT 2: History & Trends (Archived Session Data) -->
+    <div id="tab-content-history" class="tab-content">
+      <main class="main-dashboard-content">
         
-        <!-- VISUAL CHARTS -->
-        <div class="section-card main-glass">
-          <div class="section-header">
-            <div class="header-title">
-              <i data-lucide="bar-chart-3" class="color-emerald"></i>
-              <h2>Session Analytics & Trends</h2>
-            </div>
-            <div class="chart-toggles">
-              <button class="btn btn-xs active" id="btn-chart-dials">Dials</button>
-              <button class="btn btn-xs" id="btn-chart-funnel">Bookings</button>
-            </div>
-          </div>
-          <div class="chart-container">
-            <canvas id="analytics-chart"></canvas>
-            <div id="chart-no-data" class="chart-overlay">
-              <i data-lucide="trending-up"></i>
-              <p>No saved sessions yet. Save your first session to generate trend analytics!</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- PAST HISTORY LOGS -->
-        <div class="section-card main-glass history-log-card">
-          <div class="section-header search-header">
-            <div class="header-title">
-              <i data-lucide="history" class="color-amber"></i>
-              <h2>Past Session Logs (Up to 1 Year)</h2>
-            </div>
-            <div class="history-actions">
-              <button id="btn-export" class="btn btn-xs btn-outline" title="Export History as JSON">
-                <i data-lucide="download"></i> Export
-              </button>
-              <button id="btn-clear-all" class="btn btn-xs btn-danger-outline" title="Clear all history">
-                <i data-lucide="trash-2"></i> Wipe
-              </button>
+        <!-- TOP ROW: Lifetime Stats and Analytics Charts -->
+        <section class="data-insights-section">
+          
+          <!-- Lifetime stats aggregate box -->
+          <div class="insights-column-left">
+            <div class="dashboard-box aggregate-stats-box">
+              <div class="box-header">
+                <h2>Lifetime Campaign Metrics</h2>
+              </div>
+              <div class="metrics-aggregate-grid">
+                <div class="mini-metric">
+                  <span class="label">LIFETIME OUTBOUND DIALS</span>
+                  <span class="val" id="global-total-dials">0</span>
+                </div>
+                <div class="mini-metric">
+                  <span class="label">BOOKED MEETINGS (365 DAYS)</span>
+                  <span class="val success-color" id="global-bookings">0</span>
+                </div>
+                <div class="mini-metric">
+                  <span class="label">AVERAGE CONNECT RATE</span>
+                  <span class="val info-color" id="global-connect-rate">0%</span>
+                </div>
+                <div class="mini-metric">
+                  <span class="label">DIAL-TO-BOOK CONVERSION</span>
+                  <span class="val accent-color" id="global-booking-rate">0%</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- History Filters -->
-          <div class="history-filters">
-            <div class="search-box">
-              <i data-lucide="search"></i>
-              <input type="text" id="history-search" placeholder="Search by name, date or list...">
-            </div>
-            <div class="select-box">
-              <select id="history-filter-range">
-                <option value="all">All Saved (Up to 1 Year)</option>
-                <option value="today">Today</option>
-                <option value="week">Past 7 Days</option>
-                <option value="month">Past 30 Days</option>
-              </select>
+          <!-- Trend Chart Box -->
+          <div class="insights-column-right">
+            <div class="dashboard-box chart-dashboard-box">
+              <div class="box-header header-toggles">
+                <h2>Performance Trend Analytics</h2>
+                <div class="toggle-group">
+                  <button class="btn btn-sm active" id="btn-chart-dials">Activity</button>
+                  <button class="btn btn-sm" id="btn-chart-funnel">Bookings</button>
+                </div>
+              </div>
+              <div class="chart-canvas-wrapper">
+                <canvas id="analytics-chart"></canvas>
+                <div id="chart-no-data" class="chart-fallback-message">
+                  <i data-lucide="bar-chart-2"></i>
+                  <p>No saved campaigns found. Save your first session to unlock trends analysis!</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- History Table -->
-          <div class="table-scroll-container">
-            <table class="history-table">
-              <thead>
-                <tr>
-                  <th>Date & Time</th>
-                  <th>Session Label</th>
-                  <th class="text-center">Dials</th>
-                  <th class="text-center">Connects</th>
-                  <th class="text-center">Pitched</th>
-                  <th class="text-center">Rejected</th>
-                  <th class="text-center">Booked</th>
-                  <th class="text-center">Book %</th>
-                  <th class="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="history-table-body">
-                <!-- Injected via JavaScript -->
-                <tr class="empty-state-row">
-                  <td colspan="9" class="text-center">
-                    <div class="table-empty-state">
-                      <i data-lucide="folder-open"></i>
-                      <p>No historical call data found. Complete a session and click save!</p>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+        </section>
+
+        <!-- BOTTOM ROW: Historical Session Logs Table -->
+        <section class="history-logs-section">
+          <div class="dashboard-box logs-dashboard-box">
+            <div class="box-header table-actions-header">
+              <h2>Campaign Log Registry (Up to 1 Year)</h2>
+              <div class="table-actions">
+                <button id="btn-export" class="btn btn-sm btn-outline-light" title="Export as CSV sheet">
+                  <i data-lucide="download"></i> Export CSV
+                </button>
+                <button id="btn-clear-all" class="btn btn-sm btn-outline-danger" title="Wipe history cache">
+                  <i data-lucide="trash-2"></i> Wipe History
+                </button>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="table-filter-bar">
+              <div class="search-input-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="history-search" placeholder="Search campaign label, date, or specific logs...">
+              </div>
+              <div class="select-range-box">
+                <select id="history-filter-range">
+                  <option value="all">All Campaign Logs</option>
+                  <option value="today">Today's Sessions</option>
+                  <option value="week">Past 7 Days</option>
+                  <option value="month">Past 30 Days</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Scrollable Table -->
+            <div class="table-scrollable-container">
+              <table class="history-data-table">
+                <thead>
+                  <tr>
+                    <th>Date & Time</th>
+                    <th>Campaign / List Label</th>
+                    <th class="text-center">Total Dials</th>
+                    <th class="text-center">Connects</th>
+                    <th class="text-center">Pitched</th>
+                    <th class="text-center">Declined</th>
+                    <th class="text-center">Booked</th>
+                    <th class="text-center">Book Rate</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  <tr class="empty-state-row">
+                    <td colspan="9" class="text-center">
+                      <div class="table-empty-display">
+                        <i data-lucide="inbox"></i>
+                        <p>No historical campaign logs found. Complete an active session on the Tracker tab and click save!</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </section>
 
-      </section>
-
-    </main>
+      </main>
+    </div>
 
     <!-- FOOTER -->
     <footer class="app-footer">
-      <p>&copy; 2026 Appoint Funnels. Engineered for high performance converters. All data is kept securely in your browser's local cache for 365 days.</p>
+      <p>&copy; 2026 Appoint Funnels. Designed in light corporate clean format. Outbound campaign stats stored in local cache up to 365 days.</p>
     </footer>
 
   </div>
 
-  <!-- Satisfying Booked Confetti overlay canvas -->
-  <canvas id="confetti-canvas" class="confetti-overlay"></canvas>
+  <!-- Celebratory Reward Confetti Canvas -->
+  <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
   <script src="app.js"></script>
 </body>

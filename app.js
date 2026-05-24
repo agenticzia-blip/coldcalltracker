@@ -1,8 +1,8 @@
 // -------------------------------------------------------------------------- //
-//                       APPOINT FUNNELS - APPLICATION LOGIC                  //
+//              APPOINT FUNNELS - MINIMALIST COLD CALL TRACKER LOGIC          //
 // -------------------------------------------------------------------------- //
 
-// Global Application State
+// Global State
 const state = {
   activeSession: {
     total: 0,
@@ -18,28 +18,27 @@ const state = {
   chartInstance: null
 };
 
-// Timer Variables
+// Stopwatch interval
 let timerInterval = null;
 
-// Initialize Lucide Icons & Event Listeners
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Lucide Icons
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
 
-  // Load Saved State & History
+  // Load from local storage cache
   loadFromLocalStorage();
 
-  // Start Session Stopwatch
+  // Start stopwatch
   startTimer();
 
-  // Setup Event Listeners
+  // Setup control listeners
   setupEventListeners();
 
-  // Update UI and Charts
+  // Refresh user interface & draw trends
   updateUI();
-  renderCharts();
 });
 
 // -------------------------------------------------------------------------- //
@@ -47,13 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // -------------------------------------------------------------------------- //
 
 function saveToLocalStorage() {
-  localStorage.setItem('af_active_session', JSON.stringify(state.activeSession));
-  localStorage.setItem('af_history', JSON.stringify(state.history));
+  localStorage.setItem('af_active_session_min', JSON.stringify(state.activeSession));
+  localStorage.setItem('af_history_min', JSON.stringify(state.history));
 }
 
 function loadFromLocalStorage() {
-  // Load Active Session (if it exists)
-  const savedActive = localStorage.getItem('af_active_session');
+  // Load Active Session
+  const savedActive = localStorage.getItem('af_active_session_min');
   if (savedActive) {
     state.activeSession = JSON.parse(savedActive);
     if (state.activeSession.name) {
@@ -64,33 +63,32 @@ function loadFromLocalStorage() {
   }
 
   // Load History
-  const savedHistory = localStorage.getItem('af_history');
+  const savedHistory = localStorage.getItem('af_history_min');
   if (savedHistory) {
     state.history = JSON.parse(savedHistory);
   }
 
-  // Enforce 1-Year Retention Policy (Prune logs older than 365 days)
+  // Apply 365 days retention bounds
   pruneOldLogs();
 }
 
 function pruneOldLogs() {
   const oneYearAgo = Date.now() - (365 * 24 * 60 * 60 * 1000);
   const originalLength = state.history.length;
-  
-  // Filter logs to only keep those from the last 365 days
+
   state.history = state.history.filter(log => {
     const logDate = new Date(log.timestamp).getTime();
     return logDate >= oneYearAgo;
   });
 
   if (state.history.length < originalLength) {
-    console.log(`Pruned ${originalLength - state.history.length} logs older than 1 year.`);
+    console.log(`Pruned ${originalLength - state.history.length} old logs from history.`);
     saveToLocalStorage();
   }
 }
 
 // -------------------------------------------------------------------------- //
-//                            STOPWATCH / TIMER STATE                          //
+//                            SESSION TIMING CLOCK                            //
 // -------------------------------------------------------------------------- //
 
 function startTimer() {
@@ -117,72 +115,76 @@ function resetTimer() {
 }
 
 // -------------------------------------------------------------------------- //
-//                       EVENT LISTENERS & CONTROLS                           //
+//                        CONTROLS AND BINDINGS SETUP                         //
 // -------------------------------------------------------------------------- //
 
 function setupEventListeners() {
-  // Input field for Session Name
-  const sessionNameInput = document.getElementById('session-name');
-  sessionNameInput.addEventListener('input', (e) => {
+  // Tab Switching event listeners
+  document.querySelectorAll('.tab-link').forEach(link => {
+    link.addEventListener('click', () => {
+      const targetTab = link.getAttribute('data-tab');
+      switchTab(targetTab);
+    });
+  });
+
+  // Session Label input
+  const nameInput = document.getElementById('session-name');
+  nameInput.addEventListener('input', (e) => {
     state.activeSession.name = e.target.value;
     saveToLocalStorage();
   });
 
-  // Card click listeners (for incrementing counts)
-  document.querySelectorAll('.funnel-card .card-interactive-area').forEach(card => {
-    card.addEventListener('click', (e) => {
+  // Increment click body of cards
+  document.querySelectorAll('.minimalist-card .card-click-area').forEach(card => {
+    card.addEventListener('click', () => {
       const target = card.getAttribute('data-target');
       adjustCounter(target, true);
-      
-      // Satisfying click effect
-      card.parentElement.classList.add('active-pulse');
-      setTimeout(() => card.parentElement.classList.remove('active-pulse'), 150);
 
-      // Trigger Confetti on Booking
+      // Satisfying celebration on booked meeting
       if (target === 'booked') {
         triggerConfettiSplash();
       }
     });
   });
 
-  // Decrement button click listeners
+  // Decrement minus icon clicks
   document.querySelectorAll('.btn-decrement').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Avoid triggering card click
+      e.stopPropagation(); // Stop click triggers on card body
       const target = btn.getAttribute('data-target');
       adjustCounter(target, false);
     });
   });
 
-  // Reset current session button
+  // Reset Session counters
   document.getElementById('btn-reset').addEventListener('click', () => {
-    if (confirm('Are you sure you want to reset current session counters? This cannot be undone.')) {
+    if (confirm('Are you sure you want to reset current active session counters?')) {
       state.activeSession.total = 0;
       state.activeSession.picked = 0;
       state.activeSession.pitched = 0;
       state.activeSession.rejected = 0;
       state.activeSession.booked = 0;
       state.activeSession.name = '';
-      document.getElementById('session-name').value = '';
+      nameInput.value = '';
       resetTimer();
       saveToLocalStorage();
       updateUI();
     }
   });
 
-  // Save session button
+  // Save Session
   document.getElementById('btn-save').addEventListener('click', () => {
     saveSession();
   });
 
-  // Export history button
+  // Export CSV
   document.getElementById('btn-export').addEventListener('click', () => {
-    exportHistory();
+    exportToCSV();
   });
 
-  // Clear all history
+  // Clear cache logs
   document.getElementById('btn-clear-all').addEventListener('click', () => {
-    if (confirm('CAUTION: This will permanently delete ALL past call records. Do you want to proceed?')) {
+    if (confirm('CAUTION: Permanently clear all campaign logs? This cannot be undone.')) {
       state.history = [];
       saveToLocalStorage();
       updateUI();
@@ -190,39 +192,59 @@ function setupEventListeners() {
     }
   });
 
-  // Chart type toggles
+  // Toggle dynamic charts
   document.getElementById('btn-chart-dials').addEventListener('click', (e) => {
-    toggleChartType('dials', e.target);
+    toggleChart('dials', e.target);
   });
   document.getElementById('btn-chart-funnel').addEventListener('click', (e) => {
-    toggleChartType('bookings', e.target);
+    toggleChart('bookings', e.target);
   });
 
-  // Search History Input
+  // Live text search filters
   document.getElementById('history-search').addEventListener('input', () => {
     renderHistoryTable();
   });
 
-  // Filter History Select Range
+  // Date range filter selects
   document.getElementById('history-filter-range').addEventListener('change', () => {
     renderHistoryTable();
   });
 }
 
+// Tab switcher handler
+function switchTab(tabName) {
+  // Toggle tab buttons active status
+  document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+  const activeBtn = Array.from(document.querySelectorAll('.tab-link')).find(btn => btn.getAttribute('data-tab') === tabName);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // Toggle target content panel
+  const activeContent = document.getElementById(`tab-content-${tabName}`);
+  if (activeContent) activeContent.classList.add('active');
+
+  // Critical redraw for Chart.js canvas sizes when shown inside container
+  if (tabName === 'history') {
+    setTimeout(() => {
+      renderCharts();
+    }, 50); // Let CSS display block apply first
+  }
+}
+
 // -------------------------------------------------------------------------- //
-//                       CASCADING FUNNEL COUNTER LOGIC                       //
+//                       CASCADING BOUNDARY VALIDATIONS                       //
 // -------------------------------------------------------------------------- //
 
 function adjustCounter(stage, isIncrement) {
   if (isIncrement) {
     state.activeSession[stage]++;
 
-    // Cascade validations upwards to keep the funnel mathematically sound:
-    // Dials >= Connects >= Pitched >= (Booked + Not Interested)
+    // Upward cascade: Total Dials >= Connected >= Pitched >= (Booked + Not Interested)
     if (stage === 'booked' || stage === 'rejected') {
-      const neededPitched = state.activeSession.booked + state.activeSession.rejected;
-      if (state.activeSession.pitched < neededPitched) {
-        state.activeSession.pitched = neededPitched;
+      const neededPitches = state.activeSession.booked + state.activeSession.rejected;
+      if (state.activeSession.pitched < neededPitches) {
+        state.activeSession.pitched = neededPitches;
       }
     }
     if (state.activeSession.picked < state.activeSession.pitched) {
@@ -232,11 +254,11 @@ function adjustCounter(stage, isIncrement) {
       state.activeSession.total = state.activeSession.picked;
     }
   } else {
-    // Decrement
+    // Decrement adjustments
     if (state.activeSession[stage] > 0) {
       state.activeSession[stage]--;
 
-      // Cascade validation downwards to maintain funnel structure:
+      // Downward boundaries
       if (stage === 'total') {
         if (state.activeSession.picked > state.activeSession.total) {
           state.activeSession.picked = state.activeSession.total;
@@ -250,7 +272,6 @@ function adjustCounter(stage, isIncrement) {
       if (stage === 'pitched' || stage === 'picked' || stage === 'total') {
         const maxLeaves = state.activeSession.pitched;
         if (state.activeSession.booked + state.activeSession.rejected > maxLeaves) {
-          // Reduce rejected first, then booked to fit inside pitches
           state.activeSession.rejected = Math.min(state.activeSession.rejected, maxLeaves);
           state.activeSession.booked = Math.max(0, maxLeaves - state.activeSession.rejected);
         }
@@ -263,93 +284,90 @@ function adjustCounter(stage, isIncrement) {
 }
 
 // -------------------------------------------------------------------------- //
-//                            UI RENDER / REFRESH                             //
+//                            UI RENDER MANAGERS                              //
 // -------------------------------------------------------------------------- //
 
 function updateUI() {
   const active = state.activeSession;
 
-  // 1. Current Counter Displays
+  // Render Counters
   document.getElementById('count-total').textContent = active.total;
   document.getElementById('count-picked').textContent = active.picked;
   document.getElementById('count-pitched').textContent = active.pitched;
   document.getElementById('count-rejected').textContent = active.rejected;
   document.getElementById('count-booked').textContent = active.booked;
 
-  // 2. Conversion Percentages on Active Cards
-  const connectRate = active.total > 0 ? Math.round((active.picked / active.total) * 100) : 0;
+  // Render conversion percentages
+  const connRate = active.total > 0 ? Math.round((active.picked / active.total) * 100) : 0;
   const pitchRate = active.picked > 0 ? Math.round((active.pitched / active.picked) * 100) : 0;
-  const rejectRate = active.pitched > 0 ? Math.round((active.rejected / active.pitched) * 100) : 0;
-  const bookRate = active.pitched > 0 ? Math.round((active.booked / active.pitched) * 100) : 0;
-  const overallBookRate = active.total > 0 ? Math.round((active.booked / active.total) * 100) : 0;
+  const declineRate = active.pitched > 0 ? Math.round((active.rejected / active.pitched) * 100) : 0;
+  const overallRate = active.total > 0 ? Math.round((active.booked / active.total) * 100) : 0;
 
-  document.getElementById('pct-picked').textContent = `${connectRate}% Connect Rate`;
+  document.getElementById('pct-picked').textContent = `${connRate}% Connect Rate`;
   document.getElementById('pct-pitched-connect').textContent = `${pitchRate}% of Connects`;
-  document.getElementById('pct-rejected').textContent = `${rejectRate}% of Pitched`;
-  document.getElementById('pct-booked').textContent = `${overallBookRate}% Overall Rate`;
+  document.getElementById('pct-rejected').textContent = `${declineRate}% of Pitched`;
+  document.getElementById('pct-booked').textContent = `${overallRate}% Overall Rate`;
 
-  // 3. Visual Funnel Levels Update
+  // Render Visual Funnel stage values
   document.getElementById('funnel-val-total').textContent = active.total;
   document.getElementById('funnel-val-picked').textContent = active.picked;
   document.getElementById('funnel-val-pitched').textContent = active.pitched;
   document.getElementById('funnel-val-booked').textContent = active.booked;
 
-  // Calculate funnel fills
-  const connectFunnelPct = active.total > 0 ? (active.picked / active.total) * 100 : 0;
-  const pitchFunnelPct = active.total > 0 ? (active.pitched / active.total) * 100 : 0;
-  const bookFunnelPct = active.total > 0 ? (active.booked / active.total) * 100 : 0;
+  // Visual Funnel stage width percentages
+  const connectVisualPct = active.total > 0 ? (active.picked / active.total) * 100 : 0;
+  const pitchVisualPct = active.total > 0 ? (active.pitched / active.total) * 100 : 0;
+  const bookVisualPct = active.total > 0 ? (active.booked / active.total) * 100 : 0;
 
-  // Set widths of level fillers
-  document.querySelector('#funnel-lvl-total .funnel-fill').style.width = active.total > 0 ? '100%' : '0%';
-  document.querySelector('#funnel-lvl-picked .funnel-fill').style.width = `${connectFunnelPct}%`;
-  document.querySelector('#funnel-lvl-pitched .funnel-fill').style.width = `${pitchFunnelPct}%`;
-  document.querySelector('#funnel-lvl-booked .funnel-fill').style.width = `${bookFunnelPct}%`;
+  document.querySelector('#funnel-lvl-total .funnel-fill-bar').style.width = active.total > 0 ? '100%' : '0%';
+  document.querySelector('#funnel-lvl-picked .funnel-fill-bar').style.width = `${connectVisualPct}%`;
+  document.querySelector('#funnel-lvl-pitched .funnel-fill-bar').style.width = `${pitchVisualPct}%`;
+  document.querySelector('#funnel-lvl-booked .funnel-fill-bar').style.width = `${bookVisualPct}%`;
 
-  document.getElementById('funnel-pct-picked').textContent = `${connectRate}%`;
-  document.getElementById('funnel-pct-pitched').textContent = `${active.total > 0 ? Math.round(pitchFunnelPct) : 0}%`;
-  document.getElementById('funnel-pct-booked').textContent = `${active.total > 0 ? Math.round(bookFunnelPct) : 0}%`;
+  document.getElementById('funnel-pct-picked').textContent = `${connRate}%`;
+  document.getElementById('funnel-pct-pitched').textContent = `${active.total > 0 ? Math.round(pitchVisualPct) : 0}%`;
+  document.getElementById('funnel-pct-booked').textContent = `${active.total > 0 ? Math.round(bookVisualPct) : 0}%`;
 
-  // 4. Global Stats Calculations (Aggregate over history)
-  let totalDials = 0;
-  let totalBooked = 0;
-  let totalPicked = 0;
+  // Render Global aggregates
+  let gDials = 0;
+  let gBookings = 0;
+  let gConnects = 0;
 
   state.history.forEach(log => {
-    totalDials += log.total;
-    totalBooked += log.booked;
-    totalPicked += log.picked;
+    gDials += log.total;
+    gConnects += log.picked;
+    gBookings += log.booked;
   });
 
-  const globalConnectRate = totalDials > 0 ? Math.round((totalPicked / totalDials) * 100) : 0;
-  const globalBookingRate = totalDials > 0 ? Math.round((totalBooked / totalDials) * 100) : 0;
+  const avgConnRate = gDials > 0 ? Math.round((gConnects / gDials) * 100) : 0;
+  const avgBookRate = gDials > 0 ? Math.round((gBookings / gDials) * 100) : 0;
 
-  document.getElementById('global-total-dials').textContent = totalDials;
-  document.getElementById('global-bookings').textContent = totalBooked;
-  document.getElementById('global-connect-rate').textContent = `${globalConnectRate}%`;
-  document.getElementById('global-booking-rate').textContent = `${globalBookingRate}%`;
+  document.getElementById('global-total-dials').textContent = gDials;
+  document.getElementById('global-bookings').textContent = gBookings;
+  document.getElementById('global-connect-rate').textContent = `${avgConnRate}%`;
+  document.getElementById('global-booking-rate').textContent = `${avgBookRate}%`;
 
-  // 5. Render History Logs
+  // Render logs
   renderHistoryTable();
 }
 
 // -------------------------------------------------------------------------- //
-//                           SAVE & LOG CURRENT SESSION                       //
+//                       SAVE ACTIVE TRACKER SESSION                          //
 // -------------------------------------------------------------------------- //
 
 function saveSession() {
   const active = state.activeSession;
 
   if (active.total === 0) {
-    alert('Cannot save an empty session. Increment some cards first!');
+    alert('Log some outbound attempts before attempting to save the session.');
     return;
   }
 
-  // Create a new history entry
-  const sessionLabel = active.name.trim() || `Calling Session #${state.history.length + 1}`;
-  const newLog = {
-    id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+  const campaignLabel = active.name.trim() || `Outbound Session #${state.history.length + 1}`;
+  const logItem = {
+    id: 'campaign_log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
     timestamp: new Date().toISOString(),
-    name: sessionLabel,
+    name: campaignLabel,
     total: active.total,
     picked: active.picked,
     pitched: active.pitched,
@@ -357,13 +375,13 @@ function saveSession() {
     booked: active.booked
   };
 
-  // Add to start of history
-  state.history.unshift(newLog);
+  // Add to stack
+  state.history.unshift(logItem);
 
-  // Auto-prune logs older than 1 year
+  // Prune older than 365 days
   pruneOldLogs();
 
-  // Reset active session counters
+  // Reset current active states
   state.activeSession = {
     total: 0,
     picked: 0,
@@ -377,13 +395,14 @@ function saveSession() {
 
   saveToLocalStorage();
   updateUI();
-  renderCharts();
-  
-  alert('Session saved to history successfully!');
+
+  // Alert and auto-transition to history tab to see saved results!
+  alert('Outbound campaign session saved successfully!');
+  switchTab('history');
 }
 
-function deleteHistoryRow(id) {
-  if (confirm('Are you sure you want to delete this historical log entry?')) {
+function deleteHistoryItem(id) {
+  if (confirm('Permanently delete this specific outreach log?')) {
     state.history = state.history.filter(log => log.id !== id);
     saveToLocalStorage();
     updateUI();
@@ -392,51 +411,46 @@ function deleteHistoryRow(id) {
 }
 
 // -------------------------------------------------------------------------- //
-//                       HISTORY TABLE RENDERING & FILTERS                    //
+//                           HISTORY LOG TABLE RENDERING                      //
 // -------------------------------------------------------------------------- //
 
 function renderHistoryTable() {
-  const tableBody = document.getElementById('history-table-body');
+  const tbody = document.getElementById('history-table-body');
   const searchVal = document.getElementById('history-search').value.toLowerCase().trim();
   const rangeVal = document.getElementById('history-filter-range').value;
 
-  // Clear existing body
-  tableBody.innerHTML = '';
+  tbody.innerHTML = '';
 
-  // Filter logs
-  let filteredLogs = state.history;
+  let filtered = state.history;
 
-  // Filter 1: Range
+  // Filter 1: Date range
   const now = new Date();
   if (rangeVal === 'today') {
-    filteredLogs = filteredLogs.filter(log => {
-      const logDate = new Date(log.timestamp);
-      return logDate.toDateString() === now.toDateString();
-    });
+    filtered = filtered.filter(l => new Date(l.timestamp).toDateString() === now.toDateString());
   } else if (rangeVal === 'week') {
-    const sevenDaysAgo = now.getTime() - (7 * 24 * 60 * 60 * 1000);
-    filteredLogs = filteredLogs.filter(log => new Date(log.timestamp).getTime() >= sevenDaysAgo);
+    const limits = now.getTime() - (7 * 24 * 60 * 60 * 1000);
+    filtered = filtered.filter(l => new Date(l.timestamp).getTime() >= limits);
   } else if (rangeVal === 'month') {
-    const thirtyDaysAgo = now.getTime() - (30 * 24 * 60 * 60 * 1000);
-    filteredLogs = filteredLogs.filter(log => new Date(log.timestamp).getTime() >= thirtyDaysAgo);
+    const limits = now.getTime() - (30 * 24 * 60 * 60 * 1000);
+    filtered = filtered.filter(l => new Date(l.timestamp).getTime() >= limits);
   }
 
-  // Filter 2: Search Query
+  // Filter 2: Text search
   if (searchVal !== '') {
-    filteredLogs = filteredLogs.filter(log => {
-      const formattedDate = new Date(log.timestamp).toLocaleDateString();
-      return log.name.toLowerCase().includes(searchVal) || formattedDate.includes(searchVal);
+    filtered = filtered.filter(l => {
+      const dateStr = new Date(l.timestamp).toLocaleDateString();
+      return l.name.toLowerCase().includes(searchVal) || dateStr.includes(searchVal);
     });
   }
 
-  // Handle Empty State
-  if (filteredLogs.length === 0) {
-    tableBody.innerHTML = `
+  // Handle empty lists
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
       <tr class="empty-state-row">
         <td colspan="9" class="text-center">
-          <div class="table-empty-state">
-            <i data-lucide="folder-open"></i>
-            <p>${state.history.length === 0 ? 'No historical call data found. Complete a session and click save!' : 'No entries match your search/filter.'}</p>
+          <div class="table-empty-display">
+            <i data-lucide="inbox"></i>
+            <p>${state.history.length === 0 ? 'No historical campaign logs found. complete an active session above and click save!' : 'No entries match your search/filter.'}</p>
           </div>
         </td>
       </tr>
@@ -445,46 +459,45 @@ function renderHistoryTable() {
     return;
   }
 
-  // Populate Table Rows
-  filteredLogs.forEach(log => {
+  // Build rows
+  filtered.forEach(log => {
     const date = new Date(log.timestamp);
-    const dateFormatted = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-    const timeFormatted = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-    const bookingPct = log.total > 0 ? Math.round((log.booked / log.total) * 100) : 0;
+    const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    const bookRate = log.total > 0 ? Math.round((log.booked / log.total) * 100) : 0;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="white-space: nowrap;">
-        <strong>${dateFormatted}</strong><br>
-        <span style="font-size: 0.7rem; color: var(--text-muted);">${timeFormatted}</span>
+        <strong>${dateStr}</strong><br>
+        <span style="font-size: 0.72rem; color: var(--text-muted);">${timeStr}</span>
       </td>
       <td>
-        <span class="session-log-name">${escapeHTML(log.name)}</span>
+        <span style="font-weight:600;">${escapeHTML(log.name)}</span>
       </td>
       <td class="text-center info-color" style="font-weight: 600;">${log.total}</td>
       <td class="text-center" style="color: var(--color-primary); font-weight: 600;">${log.picked}</td>
       <td class="text-center warning-color" style="font-weight: 600;">${log.pitched}</td>
       <td class="text-center error-color" style="font-weight: 600;">${log.rejected}</td>
       <td class="text-center success-color" style="font-weight: 700;">${log.booked}</td>
-      <td class="text-center font-display" style="font-weight: 700; color: #fff;">
-        <span class="${bookingPct >= 10 ? 'success-color' : ''}">${bookingPct}%</span>
+      <td class="text-center font-display" style="font-weight: 700; color: var(--text-main);">
+        <span class="${bookRate >= 8 ? 'success-color' : ''}">${bookRate}%</span>
       </td>
       <td class="text-right">
-        <button class="btn-delete-row" data-id="${log.id}" title="Delete session log">
+        <button class="btn-delete-row" data-id="${log.id}" title="Delete log">
           <i data-lucide="trash"></i>
         </button>
       </td>
     `;
 
-    // Append to body
-    tableBody.appendChild(tr);
+    tbody.appendChild(tr);
   });
 
-  // Re-bind delete buttons
-  tableBody.querySelectorAll('.btn-delete-row').forEach(btn => {
+  // Re-bind click event triggers
+  tbody.querySelectorAll('.btn-delete-row').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      deleteHistoryRow(id);
+      deleteHistoryItem(id);
     });
   });
 
@@ -498,45 +511,45 @@ function escapeHTML(str) {
 }
 
 // -------------------------------------------------------------------------- //
-//                          CHART RENDERING (CHART.JS)                         //
+//                       LIGHT-THEMED CHART.JS TRENDS                         //
 // -------------------------------------------------------------------------- //
 
-function toggleChartType(type, element) {
+function toggleChart(type, btnElement) {
   state.currentChartType = type;
-  document.querySelectorAll('.chart-toggles .btn').forEach(btn => btn.classList.remove('active'));
-  element.classList.add('active');
+  document.querySelectorAll('.toggle-group .btn').forEach(b => b.classList.remove('active'));
+  btnElement.classList.add('active');
   renderCharts();
 }
 
 function renderCharts() {
-  const ctx = document.getElementById('analytics-chart').getContext('2d');
-  const emptyOverlay = document.getElementById('chart-no-data');
+  const canvas = document.getElementById('analytics-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const overlay = document.getElementById('chart-no-data');
 
-  // Handle Chart instance deletion
   if (state.chartInstance) {
     state.chartInstance.destroy();
     state.chartInstance = null;
   }
 
-  // Display empty state overlay if no saved history exists
   if (state.history.length === 0) {
-    emptyOverlay.classList.add('show');
+    overlay.classList.add('show');
     return;
   } else {
-    emptyOverlay.classList.remove('show');
+    overlay.classList.remove('show');
   }
 
-  // Max 10 recent sessions for clean display, reversed to go chronological (left to right)
+  // Reverse latest 10 items to plot chronologically
   const recentLogs = [...state.history].slice(0, 10).reverse();
-  const labels = recentLogs.map(log => {
-    const d = new Date(log.timestamp);
-    return `${d.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} (${log.name.substring(0, 10)}...)`;
+  const labels = recentLogs.map(l => {
+    const d = new Date(l.timestamp);
+    return `${d.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} (${l.name.substring(0, 8)}...)`;
   });
 
   if (state.currentChartType === 'dials') {
-    // DIALS TREND CHART (Line)
-    const dialsData = recentLogs.map(log => log.total);
-    const connectsData = recentLogs.map(log => log.picked);
+    // Activity line chart
+    const dials = recentLogs.map(l => l.total);
+    const connects = recentLogs.map(l => l.picked);
 
     state.chartInstance = new Chart(ctx, {
       type: 'line',
@@ -545,34 +558,33 @@ function renderCharts() {
         datasets: [
           {
             label: 'Total Dials',
-            data: dialsData,
-            borderColor: '#00b0ff',
-            backgroundColor: 'rgba(0, 176, 255, 0.05)',
+            data: dials,
+            borderColor: '#2563eb', // Royal blue
+            backgroundColor: 'rgba(37, 99, 235, 0.03)',
             borderWidth: 3,
-            tension: 0.3,
+            tension: 0.25,
             fill: true,
-            pointBackgroundColor: '#00b0ff',
+            pointBackgroundColor: '#2563eb',
             pointRadius: 4
           },
           {
             label: 'Total Connections',
-            data: connectsData,
-            borderColor: '#7c4dff',
-            backgroundColor: 'rgba(124, 77, 255, 0.05)',
+            data: connects,
+            borderColor: '#0ea5e9', // Info cyan
+            backgroundColor: 'transparent',
             borderWidth: 2,
-            tension: 0.3,
-            fill: true,
-            pointBackgroundColor: '#7c4dff',
+            tension: 0.25,
+            pointBackgroundColor: '#0ea5e9',
             pointRadius: 3
           }
         ]
       },
-      options: getCommonChartOptions('Session Activity History')
+      options: getCommonChartConfig('Daily Outbound Dialer trends')
     });
   } else {
-    // CONVERSIONS HISTOGRAM (Stacked Bar)
-    const bookedData = recentLogs.map(log => log.booked);
-    const rejectedData = recentLogs.map(log => log.rejected);
+    // Stacked bookings chart
+    const bookings = recentLogs.map(l => l.booked);
+    const rejections = recentLogs.map(l => l.rejected);
 
     state.chartInstance = new Chart(ctx, {
       type: 'bar',
@@ -580,35 +592,35 @@ function renderCharts() {
         labels: labels,
         datasets: [
           {
-            label: 'Calls Booked',
-            data: bookedData,
-            backgroundColor: 'rgba(0, 230, 118, 0.8)',
-            borderColor: '#00e676',
+            label: 'Closed Bookings',
+            data: bookings,
+            backgroundColor: 'rgba(16, 185, 129, 0.85)', // Success Green
+            borderColor: '#10b981',
             borderWidth: 1,
-            borderRadius: 6
+            borderRadius: 4
           },
           {
             label: 'Not Interested',
-            data: rejectedData,
-            backgroundColor: 'rgba(255, 23, 68, 0.7)',
-            borderColor: '#ff1744',
+            data: rejections,
+            backgroundColor: 'rgba(239, 68, 68, 0.8)', // Danger Red
+            borderColor: '#ef4444',
             borderWidth: 1,
-            borderRadius: 6
+            borderRadius: 4
           }
         ]
       },
       options: {
-        ...getCommonChartOptions('Session Conversion Distribution'),
+        ...getCommonChartConfig('Campaign outcome allocations'),
         scales: {
           x: {
             stacked: true,
-            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-            ticks: { color: '#8c9bb4', font: { size: 9 } }
+            grid: { color: '#f1f5f9' },
+            ticks: { color: '#64748b', font: { family: 'Inter', size: 9 } }
           },
           y: {
             stacked: true,
-            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-            ticks: { color: '#8c9bb4', stepSize: 2 }
+            grid: { color: '#f1f5f9' },
+            ticks: { color: '#64748b', stepSize: 2 }
           }
         }
       }
@@ -616,7 +628,7 @@ function renderCharts() {
   }
 }
 
-function getCommonChartOptions(title) {
+function getCommonChartConfig(sub) {
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -624,63 +636,61 @@ function getCommonChartOptions(title) {
       legend: {
         position: 'top',
         labels: {
-          color: '#8c9bb4',
+          color: '#475569',
           font: { family: 'Inter', size: 10, weight: 600 }
         }
       },
       tooltip: {
-        backgroundColor: '#0a0e28',
-        titleFont: { family: 'Outfit', weight: 'bold' },
-        bodyFont: { family: 'Inter' },
+        backgroundColor: '#ffffff',
+        titleColor: '#0f172a',
+        bodyColor: '#475569',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)'
+        borderColor: '#e2e8f0',
+        titleFont: { family: 'Outfit', weight: 'bold' },
+        bodyFont: { family: 'Inter' }
       }
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255, 255, 255, 0.03)' },
-        ticks: { color: '#8c9bb4', font: { size: 9 } }
+        grid: { color: '#f1f5f9' },
+        ticks: { color: '#64748b', font: { family: 'Inter', size: 9 } }
       },
       y: {
-        grid: { color: 'rgba(255, 255, 255, 0.03)' },
-        ticks: { color: '#8c9bb4' }
+        grid: { color: '#f1f5f9' },
+        ticks: { color: '#64748b' }
       }
     }
   };
 }
 
 // -------------------------------------------------------------------------- //
-//                          CSV / JSON HISTORY EXPORT                         //
+//                       EXPORT HISTORICAL CAMPAIGNS TO CSV                   //
 // -------------------------------------------------------------------------- //
 
-function exportHistory() {
+function exportToCSV() {
   if (state.history.length === 0) {
-    alert('No logs available to export.');
+    alert('No outreach log history available to export.');
     return;
   }
 
-  // Format historical data as CSV
-  let csvContent = 'data:text/csv;charset=utf-8,';
-  csvContent += 'Timestamp,Session Label,Total Dials,Connects,Pitched,Not Interested,Booked,Booking Rate %\n';
+  let csv = 'data:text/csv;charset=utf-8,';
+  csv += 'Timestamp,Campaign Label,Sent,Connected,Pitched,Not Interested,Booked,Booking Rate %\n';
 
-  state.history.forEach(log => {
-    const date = new Date(log.timestamp).toLocaleString();
-    const rate = log.total > 0 ? Math.round((log.booked / log.total) * 100) : 0;
+  state.history.forEach(l => {
+    const time = new Date(l.timestamp).toLocaleString();
+    const rate = l.total > 0 ? Math.round((l.booked / l.total) * 100) : 0;
+    const labelClean = `"${l.name.replace(/"/g, '""')}"`;
     
-    // Escape quotes in name
-    const nameEscaped = `"${log.name.replace(/"/g, '""')}"`;
-    
-    csvContent += `${date},${nameEscaped},${log.total},${log.picked},${log.pitched},${log.rejected},${log.booked},${rate}%\n`;
+    csv += `${time},${labelClean},${l.total},${l.picked},${l.pitched},${l.rejected},${l.booked},${rate}%\n`;
   });
 
-  // Trigger browser download link
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `appoint_funnels_history_${Date.now()}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const uri = encodeURI(csv);
+  const a = document.createElement('a');
+  a.setAttribute('href', uri);
+  a.setAttribute('download', `appoint_funnels_history_${Date.now()}.csv`);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // -------------------------------------------------------------------------- //
@@ -689,42 +699,42 @@ function exportHistory() {
 
 function triggerConfettiSplash() {
   const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
   const particles = [];
-  const colors = ['#00e676', '#7c4dff', '#00b0ff', '#ffd600', '#ff2d55', '#ffffff'];
+  const colors = ['#3b82f6', '#10b981', '#0ea5e9', '#f59e0b', '#ef4444', '#6366f1'];
 
-  // Initialize 100 floating shapes
-  for (let i = 0; i < 100; i++) {
+  // Splash 80 floating elements from the lower half
+  for (let i = 0; i < 80; i++) {
     particles.push({
-      x: canvas.width / 2 + (Math.random() - 0.5) * 100,
-      y: canvas.height * 0.7 + (Math.random() - 0.5) * 50,
-      radius: Math.random() * 5 + 3,
+      x: canvas.width / 2 + (Math.random() - 0.5) * 80,
+      y: canvas.height * 0.7,
+      radius: Math.random() * 4 + 3,
       color: colors[Math.floor(Math.random() * colors.length)],
-      vx: (Math.random() - 0.5) * 15,
-      vy: -Math.random() * 15 - 10,
-      gravity: 0.35,
+      vx: (Math.random() - 0.5) * 14,
+      vy: -Math.random() * 12 - 8,
+      gravity: 0.32,
       alpha: 1,
       rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 10
+      rotationSpeed: (Math.random() - 0.5) * 8
     });
   }
 
-  function animate() {
+  function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    let activeParticlesCount = 0;
+    let count = 0;
 
     particles.forEach(p => {
       if (p.alpha > 0) {
-        activeParticlesCount++;
+        count++;
         p.vy += p.gravity;
         p.x += p.vx;
         p.y += p.vy;
-        p.alpha -= 0.015;
+        p.alpha -= 0.018;
         p.rotation += p.rotationSpeed;
 
         ctx.save();
@@ -733,7 +743,6 @@ function triggerConfettiSplash() {
         ctx.rotate((p.rotation * Math.PI) / 180);
         ctx.fillStyle = p.color;
 
-        // Render paper confetti strips
         if (Math.random() > 0.5) {
           ctx.fillRect(-p.radius, -p.radius / 2, p.radius * 2, p.radius);
         } else {
@@ -745,17 +754,17 @@ function triggerConfettiSplash() {
       }
     });
 
-    if (activeParticlesCount > 0) {
-      requestAnimationFrame(animate);
+    if (count > 0) {
+      requestAnimationFrame(loop);
     } else {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
   }
 
-  animate();
+  loop();
 }
 
-// Window resizing handler for confetti canvas sizing
+// Keep canvas full viewport
 window.addEventListener('resize', () => {
   const canvas = document.getElementById('confetti-canvas');
   if (canvas) {
